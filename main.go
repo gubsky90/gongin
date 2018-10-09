@@ -10,7 +10,7 @@ var points = []float32 {
 	-0.5,  0.5,  0.0,
 	-0.5, -0.5,  0.0,
 	 0.5,  0.5,  0.0,
-	 
+
 	 0.5,  0.5,  0.0,
 	-0.5, -0.5,  0.0,
 	 0.5, -0.5,  0.0,
@@ -41,7 +41,7 @@ func main(){
 			out vec4 frag_color;
 			void main() {
 				vec3 col = iColor;
-				col *= abs(sin(iTime * 0.001));
+				col *= abs(sin(iTime * 0.01));
 				frag_color = vec4(col, 1.0);
 			}
 		`,
