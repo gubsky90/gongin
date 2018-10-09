@@ -1,4 +1,4 @@
-package main
+package render
 
 import (
 	"fmt"
@@ -49,6 +49,13 @@ func (s *Shader) Set1f(name string, f1 float32) {
 	location := gl.GetUniformLocation(s.id, cname)
 	gl.Uniform1f(location, f1)
 }
+
+func (s *Shader) Set1i(name string, f1 int32) {
+	cname := gl.Str(name + "\x00")
+	location := gl.GetUniformLocation(s.id, cname)
+	gl.Uniform1i(location, f1)
+}
+
 
 func (s *Shader) Set3f(name string, f1 float32, f2 float32, f3 float32) {
 	cname := gl.Str(name + "\x00")

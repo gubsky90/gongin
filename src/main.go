@@ -16,11 +16,8 @@ var points = []float32 {
 	 0.5, -0.5,  0.0,
 }
 
-func init(){
-	runtime.LockOSThread();
-}
-
 func main(){
+	runtime.LockOSThread();
 	win := initGLFW()
 	defer glfw.Terminate()
 
