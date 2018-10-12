@@ -4,4 +4,4 @@ help:
 
 run:
 	mkdir -p bin
-	go build -i -o bin/test cmd/test.go && ./bin/test
+	go build -i -o bin/test cmd/test.go && cd bin && ./test

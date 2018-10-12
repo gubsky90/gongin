@@ -1,6 +1,8 @@
 package gongin
 
 import (
+	"time"
+	"fmt"
 	"github.com/gubsky90/gongin/render"
 )
 
@@ -33,16 +35,6 @@ func (g *Gongin) fire(name string) {
 	}
 }
 
-var points = []float32 {
-	-1.0,  1.0,  0.0,
-	-1.0, -1.0,  0.0,
-	 1.0,  1.0,  0.0,
-
-	 1.0,  1.0,  0.0,
-	-1.0, -1.0,  0.0,
-	 1.0, -1.0,  0.0,
-}
-
 func (g *Gongin) Run() {
 	r := render.New()
 	defer r.Close()
@@ -53,14 +45,15 @@ func (g *Gongin) Run() {
 	// 	run = false
 	// })
 
-	mesh := render.NewMesh(points)
-
 	shader := render.NewShader(render.ShaderSource{
 		Vertex: `
 			#version 410
 			in vec3 vp;
 			void main() {
-				gl_Position = vec4(vp, 1.0);
+				float zoom = 0.3;
+				vec3 trans = vec3(0.0, -0.4, 0.0);
+				vec3 p = vp * zoom + trans;
+				gl_Position = vec4(p, 1.0);
 			}
 		`,
 		Fragment: `
@@ -115,7 +108,7 @@ func (g *Gongin) Run() {
 			}
 
 
-			void mainImage(out vec4 fragColor, in vec2 fragCoord){
+			vec3 mainImage(vec2 fragCoord){
 			    vec2 uv = fragCoord.xy/iResolution.xy - 0.5;
 			    uv.x *= iResolution.x/iResolution.y;
 
@@ -135,13 +128,11 @@ func (g *Gongin) Run() {
 			    m *= atom((uv*3.5*z2) - vec2(0.7, 0.0) * rot);
 			    // m *= atom((uv*2.5) - vec2(0.0, -0.6) * rot);
 
-			    vec3 col = mix(vec3(0.2, 0.2, 0.2), vec3(0.7, 0.8, 0.9), m);
-
-			    fragColor = vec4(col,1.0);
+			    return mix(vec3(0.2, 0.2, 0.2), vec3(0.7, 0.8, 0.9), m);
 			}
 
 			void main() {
-				mainImage(fragColor, gl_FragCoord.xy);
+				fragColor = vec4(mainImage(gl_FragCoord.xy), 1.0);
 			}
 		`,
 	})
@@ -149,9 +140,17 @@ func (g *Gongin) Run() {
 	r.UseShader(shader)
 
 
+	mesh := render.NewMeshFromFile("teapot.obj")
+
 	g.fire("ready")
 
 	for !r.ShouldClose() {
-		r.Draw(mesh)
+		start := time.Now()
+		r.Clear()
+
+		r.DrawMesh(mesh)
+
+		r.SwapBuffers()
+		fmt.Printf("Frame time: %s\n", time.Since(start))
 	}
 }
