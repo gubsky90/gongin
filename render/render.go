@@ -34,25 +34,28 @@ func (r *Render) UseShader(shader *Shader) {
 	r.shader = shader
 }
 
-func getTime() float32 {
-	r := time.Now().UnixNano() / int64(time.Second)
 
-	(int32[2])(r)
-
-	return float32(float64(r) / 1000000)
+var startTime int64
+func getStartTime() int64 {
+	if startTime == 0 {
+		startTime = getTime()
+	}
+	return startTime
 }
 
+func getTime() int64 {
+	return time.Now().UnixNano() / int64(time.Millisecond)
+}
 
 func (r *Render) Draw(mesh *Mesh) {
 	gl.ClearColor(1.0, 1.0, 1.0, 1.0)
 	gl.Clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT)
 
-	fmt.Printf("%f\n", getTime())
+	time := float32(getTime() - getStartTime()) / 1000
 
 	if r.shader != nil {
 		r.shader.Use()
-		// r.shader.Set1f("iTime", float32(time))
-		// r.shader.Set1f("iTime", time)
+		r.shader.Set1f("iTime", time)
 		r.shader.Set3f("iColor", 1.0, 0.2, 0.1)
 	}
 

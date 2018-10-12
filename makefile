@@ -3,4 +3,5 @@
 help:
 
 run:
-	go run *.go
+	mkdir -p bin
+	go build -i -o bin/test cmd/test.go && ./bin/test
