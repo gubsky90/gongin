@@ -18,7 +18,7 @@ func New() *Render {
 	return &r
 }
 
-func (r *Render) Close() {
+func (r *Render) Destroy() {
 
 }
 
@@ -65,6 +65,7 @@ func initGLFW() *glfw.Window {
 	glfw.WindowHint(glfw.Resizable, glfw.False)
 	glfw.WindowHint(glfw.OpenGLProfile, glfw.OpenGLCoreProfile)
 	glfw.WindowHint(glfw.OpenGLForwardCompatible, glfw.True)
+	glfw.WindowHint(glfw.DoubleBuffer, glfw.True)
 
 	window, err := glfw.CreateWindow(640, 480, "gongin", nil, nil)
 	if err != nil {

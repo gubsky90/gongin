@@ -37,7 +37,7 @@ func (g *Gongin) fire(name string) {
 
 func (g *Gongin) Run() {
 	r := render.New()
-	defer r.Close()
+	defer r.Destroy()
 
 	// run := true
 
