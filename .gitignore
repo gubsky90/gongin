@@ -1,3 +1,4 @@
 *.sublime-workspace
 
 bin/test
+bin/test.exe

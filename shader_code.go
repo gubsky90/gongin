@@ -4,7 +4,35 @@ import (
 	"github.com/gubsky90/gongin/render"
 )
 
-var shaderSource = render.ShaderSource{
+var postShader = render.ShaderSource{
+	Vertex: `
+		#version 410
+		in vec3 vp;
+		out vec2 TexCoords;
+
+		void main() {
+			gl_Position = vec4(vp, 1.0);
+			TexCoords = vp.xy * 0.5 - 0.5;
+		}
+	`,
+	Fragment: `
+		#version 410
+		in vec4 gl_FragCoord;
+		in vec2 TexCoords;
+		out vec4 FragColor;
+		uniform float iTime;
+		uniform sampler2D screenTexture;
+
+		void main() {
+			vec2 tp = TexCoords;
+			tp.x += sin(tp.y * 100) * 0.01;
+
+			FragColor = texture(screenTexture, tp);
+		}
+	`,
+}
+
+var meshShader = render.ShaderSource{
 	Vertex: `
 		#version 410
 		in vec3 vp;
@@ -17,7 +45,6 @@ var shaderSource = render.ShaderSource{
 	`,
 	Fragment: `
 		#version 410
-		#define WAVES 8.0
 		in vec4 gl_FragCoord;
 		out vec4 fragColor;
 

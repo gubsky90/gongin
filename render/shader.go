@@ -6,6 +6,8 @@ import (
 	"github.com/go-gl/gl/v4.1-core/gl"
 )
 
+var currentShader *Shader = nil
+
 type Shader struct {
 	id uint32
 }
@@ -15,7 +17,7 @@ type ShaderSource struct {
 	Fragment string
 }
 
-func NewShader(src ShaderSource) *Shader {
+func newShader(src ShaderSource) *Shader {
 	s := Shader{}
 	s.id = gl.CreateProgram()
 
@@ -41,7 +43,21 @@ func NewShader(src ShaderSource) *Shader {
 }
 
 func (s *Shader) Use() {
+	if s != currentShader {
+		if currentShader != nil {
+			currentShader.unbind()
+		}
+		currentShader = s
+		currentShader.bind()
+	}
+}
+
+func (s *Shader) bind() {
 	gl.UseProgram(s.id)
+}
+
+func (s *Shader) unbind() {
+
 }
 
 func (s *Shader) Set1f(name string, f1 float32) {

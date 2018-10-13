@@ -6,13 +6,31 @@ import (
 	"github.com/go-gl/gl/v4.1-core/gl"
 )
 
-type Render struct {
-	win *glfw.Window
+var currentRender *Render
+
+type RenderTarget interface {
+	SetAsCurrentRenderTarget()
 }
 
-func New() *Render {
+type Config struct {
+	Width uint
+	Height uint
+}
+
+type Render struct {
+	config Config
+	window *Window
+}
+
+func New(config Config) *Render {
+	
 	r := Render{}
-	r.win = initGLFW()
+	r.config = config
+	
+	initGLFW()
+	r.window = NewWindow(config.Width, config.Height)
+	r.window.MakeContextCurrent()
+	initOpenGL()
 	return &r
 }
 
@@ -20,8 +38,17 @@ func (r *Render) Destroy() {
 
 }
 
+func (r *Render) SwapBuffers() {
+	r.window.SwapBuffers()
+	glfw.PollEvents()
+}
+
+func (r *Render) GetWindow() *Window {
+	return r.window
+}
+
 func (r *Render) ShouldClose() bool {
-	return r.win.ShouldClose()
+	return r.window.ShouldClose()
 }
 
 func (r *Render) On(name string, cb func()) {
@@ -33,12 +60,8 @@ func (r *Render) Clear() {
 	gl.Clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT)
 }
 
-func (r *Render) SwapBuffers() {
-	r.win.SwapBuffers()
-	glfw.PollEvents()
-}
 
-func initGLFW() *glfw.Window {
+func initGLFW() {
 	if err := glfw.Init(); err != nil {
 		panic(fmt.Errorf("Could not initialize glfw: %v", err))
 	}
@@ -48,19 +71,12 @@ func initGLFW() *glfw.Window {
 	glfw.WindowHint(glfw.OpenGLProfile, glfw.OpenGLCoreProfile)
 	glfw.WindowHint(glfw.OpenGLForwardCompatible, glfw.True)
 	glfw.WindowHint(glfw.DoubleBuffer, glfw.True)
+}
 
-	window, err := glfw.CreateWindow(640, 480, "gongin", nil, nil)
-	if err != nil {
-		panic(fmt.Errorf("Could not create window: %v", err))
-	}
-
-	window.MakeContextCurrent()
-
+func initOpenGL() {
 	if err := gl.Init(); err != nil {
 		panic(fmt.Errorf("Could not initialize OpenGL: %v", err))
 	}
 	version := gl.GoStr(gl.GetString(gl.VERSION))
 	fmt.Println("OpenGL version", version)
-
-	return window
 }

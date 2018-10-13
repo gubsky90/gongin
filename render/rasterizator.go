@@ -1,24 +1,86 @@
 package render
 
+import (
+	// "os"
+	// "fmt"
+	"github.com/go-gl/gl/v4.1-core/gl"
+)
+
 // Rasterizator ...
 type Rasterizator struct {
+	render *Render
 	shader *Shader
+	target RenderTarget
+	textures map[string]*Texture
 }
 
-// NewRasterizator ...
-func NewRasterizator(shader *Shader) *Rasterizator {
+func NewRasterizator(target RenderTarget, src ShaderSource) *Rasterizator {
 	r := Rasterizator{}
-	r.shader = shader
+	r.target = target
+	r.shader = newShader(src)
+	r.textures = make(map[string]*Texture)
 	return &r
+}
+
+func (r *Rasterizator) SetTexture(name string, texture *Texture) {
+	r.textures[name] = texture
+}
+
+func (r *Rasterizator) before() {
+	r.shader.Use()
+	r.target.SetAsCurrentRenderTarget()
+
+	texture_slots := []uint32{
+		gl.TEXTURE0,
+		gl.TEXTURE1,
+		gl.TEXTURE2,
+	}
+
+	var idx int32 = 0
+	for name, texture := range r.textures {
+		gl.ActiveTexture(texture_slots[idx])
+		gl.BindTexture(gl.TEXTURE_2D, texture.GetId())
+		r.shader.Set1i(name, idx)
+		idx++
+	}
+
+	gl.ActiveTexture(0)
+}
+
+func (r *Rasterizator) after() {
+
+}
+
+
+var rect *Mesh
+func (r *Rasterizator) DrawRect() {
+	r.before()
+
+	if rect == nil {
+		rect = NewMesh([]float32 {
+			-1.0, -1.0, 0.0,
+			 1.0, -1.0, 0.0,
+			-1.0,  1.0, 0.0,
+			-1.0,  1.0, 0.0,
+			 1.0, -1.0, 0.0,
+			 1.0,  1.0, 0.0,
+		})
+	}
+
+	rect.Draw()
+
+	r.after()
 }
 
 // DrawMesh ...
 func (r *Rasterizator) DrawMesh(mesh *Mesh) {
-	r.shader.Use()
+	r.before()
 
 	time := float32(getTime() - getStartTime()) / 1000
-
 	r.shader.Set1f("iTime", time)
-
 	mesh.Draw()
+
+	r.after()
 }
+
+

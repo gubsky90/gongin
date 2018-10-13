@@ -36,21 +36,28 @@ func (g *Gongin) fire(name string) {
 }
 
 func (g *Gongin) Run() {
-	r := render.New()
+	r := render.New(render.Config{
+		Width: 640,
+		Height: 480,
+	})
 	defer r.Destroy()
 
-	shader := render.NewShader(shaderSource)
-	meshRaster := render.NewRasterizator(shader)
+	fb := render.NewFramebuffer(640, 480)
+
+	meshRaster := render.NewRasterizator(fb, meshShader)
+
+	postRaster := render.NewRasterizator(r.GetWindow(), postShader)
+	postRaster.SetTexture("screenTexture", fb.Color)
 
 	mesh := render.NewMeshFromFile("teapot.obj")
-
 	g.fire("ready")
 
 	for !r.ShouldClose() {
 		start := time.Now()
-		r.Clear()
+		// r.Clear()
 
 		meshRaster.DrawMesh(mesh)
+		postRaster.DrawRect()
 
 		r.SwapBuffers()
 		fmt.Printf("Frame time: %s\n", time.Since(start))
