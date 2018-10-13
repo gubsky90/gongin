@@ -44,9 +44,9 @@ func (g *Gongin) Run() {
 
 	fb := render.NewFramebuffer(640, 480)
 
-	meshRaster := render.NewRasterizator(fb, meshShader)
+	meshRaster := render.NewRasterizator(fb, render.NewShader(meshShader))
 
-	postRaster := render.NewRasterizator(r.GetWindow(), postShader)
+	postRaster := render.NewRasterizator(r.GetWindow(), render.NewShader(postShader))
 	postRaster.SetTexture("screenTexture", fb.Color)
 
 	mesh := render.NewMeshFromFile("teapot.obj")

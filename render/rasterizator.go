@@ -14,10 +14,10 @@ type Rasterizator struct {
 	textures map[string]*Texture
 }
 
-func NewRasterizator(target RenderTarget, src ShaderSource) *Rasterizator {
+func NewRasterizator(target RenderTarget, shader *Shader) *Rasterizator {
 	r := Rasterizator{}
 	r.target = target
-	r.shader = newShader(src)
+	r.shader = shader
 	r.textures = make(map[string]*Texture)
 	return &r
 }

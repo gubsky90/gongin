@@ -17,7 +17,7 @@ type ShaderSource struct {
 	Fragment string
 }
 
-func newShader(src ShaderSource) *Shader {
+func NewShader(src ShaderSource) *Shader {
 	s := Shader{}
 	s.id = gl.CreateProgram()
 
