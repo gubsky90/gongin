@@ -42,6 +42,16 @@ func NewShader(src ShaderSource) *Shader {
 	return &s
 }
 
+func NewShaderFromFile(file string) *Shader {
+	s := Shader{}
+	return &s
+}
+
+func NewShaderWatchFile(file string) *Shader {
+	s := Shader{}
+	return &s
+}
+
 func (s *Shader) Use() {
 	if s != currentShader {
 		if currentShader != nil {

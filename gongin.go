@@ -56,7 +56,7 @@ func (g *Gongin) Run() {
 		start := time.Now()
 		// r.Clear()
 
-		meshRaster.DrawMesh(mesh)
+		meshRaster.Draw(mesh)
 		postRaster.DrawRect()
 
 		r.SwapBuffers()

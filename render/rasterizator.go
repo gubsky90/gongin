@@ -6,6 +6,10 @@ import (
 	"github.com/go-gl/gl/v4.1-core/gl"
 )
 
+type Drawable interface {
+	Draw()
+}
+
 // Rasterizator ...
 type Rasterizator struct {
 	render *Render
@@ -57,13 +61,13 @@ func (r *Rasterizator) DrawRect() {
 	r.before()
 
 	if rect == nil {
-		rect = NewMesh([]float32 {
+		rect = NewMesh([]float32{
 			-1.0, -1.0, 0.0,
 			 1.0, -1.0, 0.0,
 			-1.0,  1.0, 0.0,
-			-1.0,  1.0, 0.0,
-			 1.0, -1.0, 0.0,
 			 1.0,  1.0, 0.0,
+		}, []uint32{
+			0, 1, 2, 2, 1, 3,
 		})
 	}
 
@@ -73,12 +77,12 @@ func (r *Rasterizator) DrawRect() {
 }
 
 // DrawMesh ...
-func (r *Rasterizator) DrawMesh(mesh *Mesh) {
+func (r *Rasterizator) Draw(drawable Drawable) {
 	r.before()
 
 	time := float32(getTime() - getStartTime()) / 1000
 	r.shader.Set1f("iTime", time)
-	mesh.Draw()
+	drawable.Draw()
 
 	r.after()
 }

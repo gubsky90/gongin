@@ -1,6 +1,7 @@
 package render
 
 import (
+	// "os"
 	"fmt"
 	"github.com/go-gl/gl/v4.1-core/gl"
 	assimp "github.com/tbogdala/assimp-go"
@@ -9,6 +10,7 @@ import (
 type Mesh struct {
 	vbo uint32
 	vao uint32
+	ebo uint32
 	count int32
 }
 
@@ -24,50 +26,48 @@ func NewMeshFromFile(file string) *Mesh {
 
 	mesh := meshes[0]
 
-	raw := make([]float32, mesh.FaceCount * 3 * 3)
-	for i := uint32(0); i < mesh.FaceCount; i++ {
-		offset := i*9
-		face := mesh.Faces[i]
-
-		// copy(raw[offset+0:offset+2], mesh.Vertices[face[0]][0:2])
-		// copy(raw[offset+3:offset+5], mesh.Vertices[face[1]][0:2])
-		// copy(raw[offset+6:offset+8], mesh.Vertices[face[2]][0:2])
-
-		raw[offset + 0] = mesh.Vertices[face[0]][0]
-		raw[offset + 1] = mesh.Vertices[face[0]][1]
-		raw[offset + 2] = mesh.Vertices[face[0]][2]
-
-		raw[offset + 3] = mesh.Vertices[face[1]][0]
-		raw[offset + 4] = mesh.Vertices[face[1]][1]
-		raw[offset + 5] = mesh.Vertices[face[1]][2]
-
-		raw[offset + 6] = mesh.Vertices[face[2]][0]
-		raw[offset + 7] = mesh.Vertices[face[2]][1]
-		raw[offset + 8] = mesh.Vertices[face[2]][2]
+	vertices := make([]float32, mesh.VertexCount * 3)
+	for i := uint32(0); i < mesh.VertexCount; i++ {
+		copy(vertices[i*3:i*3+3], mesh.Vertices[i][0:3])
 	}
 
-	return NewMesh(raw)
+	indices := make([]uint32, mesh.FaceCount*3)
+	for i := uint32(0); i < mesh.FaceCount; i++ {
+		copy(indices[i*3:i*3+3], mesh.Faces[i][0:3])
+	}
+
+	return NewMesh(vertices, indices)
 }
 
-func NewMesh (points []float32) *Mesh {
+func NewMesh (vertices []float32, indices []uint32) *Mesh {
 	m := Mesh{}
 
-	m.count = int32(len(points) / 3)
-
-	gl.GenBuffers(1, &m.vbo)
-	gl.BindBuffer(gl.ARRAY_BUFFER, m.vbo)
-	gl.BufferData(gl.ARRAY_BUFFER, 4 * len(points), gl.Ptr(points), gl.STATIC_DRAW)
+	m.count = int32(len(indices))
 
 	gl.GenVertexArrays(1, &m.vao)
+	gl.GenBuffers(1, &m.vbo)
+	gl.GenBuffers(1, &m.ebo)
+	
 	gl.BindVertexArray(m.vao)
-	gl.EnableVertexAttribArray(0)
-	gl.BindBuffer(gl.ARRAY_BUFFER, m.vbo)
-	gl.VertexAttribPointer(0, 3, gl.FLOAT, false, 0, nil)
+		// Vertices
+		gl.BindBuffer(gl.ARRAY_BUFFER, m.vbo)
+		gl.BufferData(gl.ARRAY_BUFFER, 4*len(vertices), gl.Ptr(vertices), gl.STATIC_DRAW)
 
+		// Indices
+		gl.BindBuffer(gl.ELEMENT_ARRAY_BUFFER, m.ebo)
+		gl.BufferData(gl.ELEMENT_ARRAY_BUFFER, 4*len(indices), gl.Ptr(indices), gl.STATIC_DRAW)
+
+		// Attributes
+		gl.VertexAttribPointer(0, 3, gl.FLOAT, false, 0, nil)
+		gl.EnableVertexAttribArray(0)
+	gl.BindVertexArray(0)
 	return &m
 }
 
 func (m *Mesh) Draw() {
+	// gl.BindVertexArray(m.vao)
+	// gl.DrawArrays(gl.TRIANGLES, 0, m.count)
+
 	gl.BindVertexArray(m.vao)
-	gl.DrawArrays(gl.TRIANGLES, 0, m.count)
+	gl.DrawElements(gl.TRIANGLES, m.count, gl.UNSIGNED_INT, nil)
 }
