@@ -8,8 +8,16 @@ import (
 
 var currentShader *Shader = nil
 
+type ShaderTextureItem struct {
+	pos int32
+	glSlot uint32
+	texture *Texture
+}
+
 type Shader struct {
 	id uint32
+	uniforms map[int32]interface{}
+	textures map[string]ShaderTextureItem
 }
 
 type ShaderSource struct {
@@ -19,6 +27,9 @@ type ShaderSource struct {
 
 func NewShader(src ShaderSource) *Shader {
 	s := Shader{}
+	s.uniforms = make(map[int32]interface{})
+	s.textures = make(map[string]ShaderTextureItem)
+
 	s.id = gl.CreateProgram()
 
 	if src.Vertex != "" {
@@ -64,29 +75,69 @@ func (s *Shader) Use() {
 
 func (s *Shader) bind() {
 	gl.UseProgram(s.id)
+
+	for location, value := range s.uniforms {
+		switch t:= value.(type) {
+		case *int32:
+			gl.Uniform1i(location, *value.(*int32))
+		case *float32:
+			gl.Uniform1f(location, *value.(*float32))
+		default:
+			panic(fmt.Errorf("type unsupport: %T", t))
+		}
+	}
+
+	for _, item := range s.textures {
+		gl.ActiveTexture(item.glSlot)
+		gl.BindTexture(gl.TEXTURE_2D, item.texture.GetId())
+	}
+
+	gl.ActiveTexture(0)
 }
 
 func (s *Shader) unbind() {
 
 }
 
-func (s *Shader) Set1f(name string, f1 float32) {
+func (s *Shader) Bind(name string, value interface{}) {
 	cname := gl.Str(name + "\x00")
 	location := gl.GetUniformLocation(s.id, cname)
-	gl.Uniform1f(location, f1)
+	if location < 0 {
+		panic(fmt.Errorf("Not found unifform with name \"%s\"", name))
+	}
+	switch t:= value.(type) {
+	case *Texture:
+		gl.Uniform1i(location, s.setTexture(name, value.(*Texture)))
+	case *int32:
+	case *float32:
+		s.uniforms[location] = value
+	default:
+		panic(fmt.Errorf("type unsupport: %T", t))
+	}
 }
 
-func (s *Shader) Set1i(name string, f1 int32) {
-	cname := gl.Str(name + "\x00")
-	location := gl.GetUniformLocation(s.id, cname)
-	gl.Uniform1i(location, f1)
-}
+func (s *Shader) setTexture(name string, texture *Texture) int32 {
+	glTextureSlots := []uint32{
+		gl.TEXTURE0,
+		gl.TEXTURE1,
+		gl.TEXTURE2,
+	}
 
+	if _, ok := s.textures[name]; !ok {
+		pos := len(s.textures)
 
-func (s *Shader) Set3f(name string, f1 float32, f2 float32, f3 float32) {
-	cname := gl.Str(name + "\x00")
-	location := gl.GetUniformLocation(s.id, cname)
-	gl.Uniform3f(location, f1, f2, f3)
+		if pos >= len(glTextureSlots) {
+			panic(fmt.Errorf("All texture slots used"))
+		}
+
+		s.textures[name] = ShaderTextureItem{
+			texture: texture,
+			pos: int32(pos),
+			glSlot: glTextureSlots[pos],
+		}
+	}
+
+	return s.textures[name].pos
 }
 
 func compileShader(src string, shaderType uint32) (uint32, error) {

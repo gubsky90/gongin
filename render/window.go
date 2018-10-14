@@ -22,5 +22,15 @@ func NewWindow (width uint, height uint) *Window {
 }
 
 func (w *Window) SetAsCurrentRenderTarget() {
-	gl.BindFramebuffer(gl.FRAMEBUFFER, 0)
+	if currentFramebuffer != 0 {
+		currentFramebuffer = 0
+		gl.BindFramebuffer(gl.FRAMEBUFFER, 0)
+	}
+}
+
+func (w *Window) Clear() {
+	w.SetAsCurrentRenderTarget()
+
+	gl.ClearColor(1.0, 1.0, 1.0, 1.0)
+	gl.Clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT)
 }

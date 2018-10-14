@@ -2,22 +2,10 @@ package render
 
 import (
 	"fmt"
-	"time"
 	"github.com/go-gl/gl/v4.1-core/gl"
 )
 
-var startTime int64
-
-func getStartTime() int64 {
-	if startTime == 0 {
-		startTime = getTime()
-	}
-	return startTime
-}
-
-func getTime() int64 {
-	return time.Now().UnixNano() / int64(time.Millisecond)
-}
+var currentFramebuffer uint32 = 0
 
 func checkOpenGLError() {
 	var errors []uint32

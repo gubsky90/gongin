@@ -24,7 +24,7 @@ func NewFramebuffer(width uint, height uint) *Framebuffer {
 		panic(fmt.Errorf("Bad framebuffer: code %d", s))
 	}
 
-	gl.BindFramebuffer(gl.FRAMEBUFFER, 0)
+	gl.BindFramebuffer(gl.FRAMEBUFFER, currentFramebuffer)
 
 	checkOpenGLError()
 
@@ -36,5 +36,15 @@ func (fb *Framebuffer) Distroy() {
 }
 
 func (fb *Framebuffer) SetAsCurrentRenderTarget() {
-	gl.BindFramebuffer(gl.FRAMEBUFFER, fb.fbo)
+	if currentFramebuffer != fb.fbo {
+		currentFramebuffer = fb.fbo
+		gl.BindFramebuffer(gl.FRAMEBUFFER, fb.fbo)
+	}
+}
+
+func (fb *Framebuffer) Clear() {
+	fb.SetAsCurrentRenderTarget()
+
+	gl.ClearColor(1.0, 1.0, 1.0, 1.0)
+	gl.Clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT)
 }

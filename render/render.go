@@ -6,10 +6,9 @@ import (
 	"github.com/go-gl/gl/v4.1-core/gl"
 )
 
-var currentRender *Render
-
 type RenderTarget interface {
 	SetAsCurrentRenderTarget()
+	Clear()
 }
 
 type Config struct {
@@ -54,12 +53,6 @@ func (r *Render) ShouldClose() bool {
 func (r *Render) On(name string, cb func()) {
 
 }
-
-func (r *Render) Clear() {
-	gl.ClearColor(1.0, 1.0, 1.0, 1.0)
-	gl.Clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT)
-}
-
 
 func initGLFW() {
 	if err := glfw.Init(); err != nil {

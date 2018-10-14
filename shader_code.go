@@ -25,7 +25,7 @@ var postShader = render.ShaderSource{
 
 		void main() {
 			vec2 tp = TexCoords;
-			tp.x += sin(tp.y * 100) * 0.01;
+			tp.x += sin(tp.y * 100 + iTime) * 0.01;
 
 			FragColor = texture(screenTexture, tp);
 		}
