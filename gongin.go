@@ -42,17 +42,13 @@ func (g *Gongin) Run() {
 	})
 	defer r.Destroy()
 
-	var iTime float32
-
 	fb := render.NewFramebuffer(640, 480)
 	win := r.GetWindow()
 
 	meshRaster := render.NewRasterizator(fb, render.NewShader(meshShader))
-	meshRaster.Bind("iTime", &iTime)
 
 	postRaster := render.NewRasterizator(win, render.NewShader(postShader))
-	postRaster.Bind("screenTexture", fb.Color)
-	postRaster.Bind("iTime", &iTime)
+	postRaster.Set("screenTexture", fb.Color)
 
 	mesh := render.NewMeshFromFile("teapot.obj")
 	g.fire("ready")
@@ -60,13 +56,15 @@ func (g *Gongin) Run() {
 	for !r.ShouldClose() {
 		start := time.Now()
 
-		iTime = float32(getTime() - getStartTime()) / 1000
+		iTime := float32(getTime() - getStartTime()) / 1000
 
 		fb.Clear()
 		meshRaster.Draw(mesh)
+		meshRaster.Set("iTime", iTime)
 
 		// win.Clear()
 		postRaster.DrawRect()
+		meshRaster.Set("iTime", iTime)
 
 		r.SwapBuffers()
 		fmt.Printf("Frame time: %s\n", time.Since(start))

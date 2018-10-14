@@ -24,8 +24,8 @@ func NewRasterizator(target RenderTarget, shader *Shader) *Rasterizator {
 	return &r
 }
 
-func (r *Rasterizator) Bind(name string, value interface{}) {
-	r.shader.Bind(name, value)
+func (r *Rasterizator) Set(name string, value interface{}) {
+	r.shader.Set(name, value)
 }
 
 func (r *Rasterizator) before() {

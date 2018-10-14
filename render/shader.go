@@ -16,7 +16,7 @@ type ShaderTextureItem struct {
 
 type Shader struct {
 	id uint32
-	uniforms map[int32]interface{}
+	uniformLocations map[string]int32
 	textures map[string]ShaderTextureItem
 }
 
@@ -27,7 +27,7 @@ type ShaderSource struct {
 
 func NewShader(src ShaderSource) *Shader {
 	s := Shader{}
-	s.uniforms = make(map[int32]interface{})
+	s.uniformLocations = make(map[string]int32)
 	s.textures = make(map[string]ShaderTextureItem)
 
 	s.id = gl.CreateProgram()
@@ -76,17 +76,6 @@ func (s *Shader) Use() {
 func (s *Shader) bind() {
 	gl.UseProgram(s.id)
 
-	for location, value := range s.uniforms {
-		switch t:= value.(type) {
-		case *int32:
-			gl.Uniform1i(location, *value.(*int32))
-		case *float32:
-			gl.Uniform1f(location, *value.(*float32))
-		default:
-			panic(fmt.Errorf("type unsupport: %T", t))
-		}
-	}
-
 	for _, item := range s.textures {
 		gl.ActiveTexture(item.glSlot)
 		gl.BindTexture(gl.TEXTURE_2D, item.texture.GetId())
@@ -99,18 +88,28 @@ func (s *Shader) unbind() {
 
 }
 
-func (s *Shader) Bind(name string, value interface{}) {
-	cname := gl.Str(name + "\x00")
-	location := gl.GetUniformLocation(s.id, cname)
-	if location < 0 {
-		panic(fmt.Errorf("Not found unifform with name \"%s\"", name))
+func (s *Shader) getUniformLocation(name string) int32 {
+	if _, ok := s.uniformLocations[name]; !ok {
+		cname := gl.Str(name + "\x00")
+		location := gl.GetUniformLocation(s.id, cname)
+		if location < 0 {
+			panic(fmt.Errorf("Not found uniform with name \"%s\"", name))
+		}
+		s.uniformLocations[name] = location
 	}
+
+	return s.uniformLocations[name]
+}
+
+func (s *Shader) Set(name string, value interface{}) {
+	location := s.getUniformLocation(name)
 	switch t:= value.(type) {
 	case *Texture:
 		gl.Uniform1i(location, s.setTexture(name, value.(*Texture)))
-	case *int32:
-	case *float32:
-		s.uniforms[location] = value
+	case int32:
+		gl.Uniform1i(location, value.(int32))
+	case float32:
+		gl.Uniform1f(location, value.(float32))
 	default:
 		panic(fmt.Errorf("type unsupport: %T", t))
 	}
