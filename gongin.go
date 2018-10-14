@@ -2,7 +2,7 @@ package gongin
 
 import (
 	"time"
-	"fmt"
+	// "fmt"
 	"github.com/gubsky90/gongin/render"
 )
 
@@ -45,16 +45,26 @@ func (g *Gongin) Run() {
 	fb := render.NewFramebuffer(640, 480)
 	win := r.GetWindow()
 
-	meshRaster := render.NewRasterizator(fb, render.NewShader(meshShader))
+	meshShader, err := render.NewShaderWatchFile("../assets/main.yml")
+	if err != nil {
+		panic(err)
+	}
 
-	postRaster := render.NewRasterizator(win, render.NewShader(postShader))
+	postShader, err := render.NewShaderWatchFile("../assets/post.yml")
+	if err != nil {
+		panic(err)
+	}
+
+	meshRaster := render.NewRasterizator(fb, meshShader)
+	postRaster := render.NewRasterizator(win, postShader)
 	postRaster.Set("screenTexture", fb.Color)
 
-	mesh := render.NewMeshFromFile("teapot.obj")
+	mesh := render.NewMeshFromFile("../assets/teapot.obj")
 	g.fire("ready")
 
 	for !r.ShouldClose() {
-		start := time.Now()
+
+		// start := time.Now()
 
 		iTime := float32(getTime() - getStartTime()) / 1000
 
@@ -67,7 +77,7 @@ func (g *Gongin) Run() {
 		meshRaster.Set("iTime", iTime)
 
 		r.SwapBuffers()
-		fmt.Printf("Frame time: %s\n", time.Since(start))
+		// fmt.Printf("Frame time: %s\n", time.Since(start))
 	}
 }
 

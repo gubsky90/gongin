@@ -1,8 +1,12 @@
 package render
 
 import (
+	// "os"
 	"fmt"
 	"strings"
+	"io/ioutil"
+	"github.com/go-yaml/yaml"
+	"github.com/rjeczalik/notify"
 	"github.com/go-gl/gl/v4.1-core/gl"
 )
 
@@ -21,46 +25,119 @@ type Shader struct {
 }
 
 type ShaderSource struct {
-	Vertex string
-	Fragment string
+	Vertex string `yaml:"vertex"`
+	Fragment string `yaml:"fragment"`
 }
 
-func NewShader(src ShaderSource) *Shader {
+func _newShader() *Shader {
 	s := Shader{}
 	s.uniformLocations = make(map[string]int32)
 	s.textures = make(map[string]ShaderTextureItem)
+	return &s
+}
+
+func NewShader(src ShaderSource) *Shader {
+	s := _newShader()
+	s.compile(src)
+	return s
+}
+
+func NewShaderFromFile(file string) (*Shader, error){
+	s := _newShader()
+	if err := s.load(file); err != nil {
+		return nil, err
+	}
+	return s, nil
+}
+
+func NewShaderWatchFile(file string) (*Shader, error) {
+	s := _newShader()
+
+	c := make(chan notify.EventInfo)
+	if err := notify.Watch("../assets", c, notify.Write); err != nil {
+		
+		fmt.Println(err)
+		return nil, err
+	}
+	// defer notify.Stop(c)
+
+	if err := s.load(file); err != nil {
+		fmt.Errorf("Shader error: %s", err)
+	}
+	
+	go func() {
+		for {
+			select {
+			case <-c:
+				fmt.Println("Shader file changes")
+				callFromMain(func(){
+					if err := s.load(file); err != nil {
+						fmt.Errorf("Shader error: %s", err)
+					} else {
+						fmt.Println("Shader successfull recompile")
+					}
+				})
+			}
+		}
+	}()
+
+	return s, nil
+}
+
+func (s *Shader) load(file string) error {
+	var (
+		err error
+		data []byte
+	)
+
+	fmt.Println("Shader before load file", file)
+
+	data, err = ioutil.ReadFile(file)
+	if err != nil {
+		return err
+	}
+
+	fmt.Println("Shader after load file", file)
+
+	shaderSource := ShaderSource{}
+	err = yaml.Unmarshal(data, &shaderSource)
+	if err != nil {
+		return err
+	}
+
+	fmt.Println("Shader after parse file", file)
+
+	return s.compile(shaderSource)
+}
+
+func (s *Shader) compile(src ShaderSource) error {
+	if s.id > 0 {
+		gl.DeleteProgram(s.id)
+	}
 
 	s.id = gl.CreateProgram()
 
 	if src.Vertex != "" {
 		vert, err := compileShader(src.Vertex, gl.VERTEX_SHADER)
+		defer gl.DeleteShader(vert)
 		if err != nil {
-			panic(err)
+			return err
 		}
 		gl.AttachShader(s.id, vert)
 	}
 
 	if src.Fragment != "" {
 		frag, err := compileShader(src.Fragment, gl.FRAGMENT_SHADER)
+		defer gl.DeleteShader(frag)
 		if err != nil {
-			panic(err)
+			return err
 		}
 		gl.AttachShader(s.id, frag)
 	}
 
 	gl.LinkProgram(s.id)
 
-	return &s
-}
-
-func NewShaderFromFile(file string) *Shader {
-	s := Shader{}
-	return &s
-}
-
-func NewShaderWatchFile(file string) *Shader {
-	s := Shader{}
-	return &s
+	return nil
 }
 
 func (s *Shader) Use() {

@@ -37,9 +37,26 @@ func (r *Render) Destroy() {
 
 }
 
+var cMain chan func()
+func callFromMain(fn func()) {
+	if cMain == nil {
+		cMain =make(chan func())
+	}
+	cMain <- fn
+}
+
+func doMainFunctions() {
+	select {
+	case fn := <- cMain:
+		fn()
+	default:
+	}
+}
+
 func (r *Render) SwapBuffers() {
 	r.window.SwapBuffers()
 	glfw.PollEvents()
+	doMainFunctions()
 }
 
 func (r *Render) GetWindow() *Window {
