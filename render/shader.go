@@ -3,6 +3,7 @@ package render
 import (
 	// "os"
 	"fmt"
+	"time"
 	"strings"
 	"io/ioutil"
 	"github.com/go-yaml/yaml"
@@ -54,8 +55,7 @@ func NewShaderWatchFile(file string) (*Shader, error) {
 	s := _newShader()
 
 	c := make(chan notify.EventInfo)
-	if err := notify.Watch("../assets", c, notify.Write); err != nil {
-		
+	if err := notify.Watch(file, c, notify.Write); err != nil {
 		fmt.Println(err)
 		return nil, err
 	}
@@ -64,12 +64,16 @@ func NewShaderWatchFile(file string) (*Shader, error) {
 	if err := s.load(file); err != nil {
 		fmt.Errorf("Shader error: %s", err)
 	}
-	
+
 	go func() {
+		timer := time.NewTimer(0)
+		<-timer.C
 		for {
 			select {
 			case <-c:
-				fmt.Println("Shader file changes")
+				timer.Reset(time.Second)
+			case <-timer.C:
+				fmt.Println("Shader file changes", file)
 				callFromMain(func(){
 					if err := s.load(file); err != nil {
 						fmt.Errorf("Shader error: %s", err)
@@ -180,15 +184,15 @@ func (s *Shader) getUniformLocation(name string) int32 {
 
 func (s *Shader) Set(name string, value interface{}) {
 	location := s.getUniformLocation(name)
-	switch t:= value.(type) {
+	switch v:= value.(type) {
 	case *Texture:
-		gl.Uniform1i(location, s.setTexture(name, value.(*Texture)))
+		gl.Uniform1i(location, s.setTexture(name, v))
 	case int32:
-		gl.Uniform1i(location, value.(int32))
+		gl.Uniform1i(location, v)
 	case float32:
-		gl.Uniform1f(location, value.(float32))
+		gl.Uniform1f(location, v)
 	default:
-		panic(fmt.Errorf("type unsupport: %T", t))
+		panic(fmt.Errorf("type unsupport: %T", v))
 	}
 }
 
