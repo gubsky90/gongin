@@ -7,8 +7,6 @@ import (
 
 var currentFramebuffer uint32 = 0
 
-
-
 func checkOpenGLError() {
 	var errors []uint32
 	for {

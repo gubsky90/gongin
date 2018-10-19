@@ -1,14 +1,12 @@
 package render
 
 import (
-	// "os"
 	"fmt"
-	"time"
 	"strings"
 	"io/ioutil"
 	"github.com/go-yaml/yaml"
-	"github.com/rjeczalik/notify"
 	"github.com/go-gl/gl/v4.1-core/gl"
+	"github.com/gubsky90/gongin/tools"
 )
 
 var currentShader *Shader = nil
@@ -23,6 +21,7 @@ type Shader struct {
 	id uint32
 	uniformLocations map[string]int32
 	textures map[string]ShaderTextureItem
+	watcher *tools.FileWatcher
 }
 
 type ShaderSource struct {
@@ -51,41 +50,28 @@ func NewShaderFromFile(file string) (*Shader, error){
 	return s, nil
 }
 
-func NewShaderWatchFile(file string) (*Shader, error) {
-	s := _newShader()
-
-	c := make(chan notify.EventInfo)
-	if err := notify.Watch(file, c, notify.Write); err != nil {
-		fmt.Println(err)
-		return nil, err
-	}
-	// defer notify.Stop(c)
+func NewShaderWatchFile(file string) (s *Shader, err error) {
+	s = _newShader()
 
 	if err := s.load(file); err != nil {
 		fmt.Errorf("Shader error: %s", err)
 	}
 
-	go func() {
-		timer := time.NewTimer(0)
-		<-timer.C
-		for {
-			select {
-			case <-c:
-				timer.Reset(time.Second)
-			case <-timer.C:
-				fmt.Println("Shader file changes", file)
-				callFromMain(func(){
-					if err := s.load(file); err != nil {
-						fmt.Errorf("Shader error: %s", err)
-					} else {
-						fmt.Println("Shader successfull recompile")
-					}
-				})
+	if s.watcher, err = tools.NewFileWatcher(file, func() {
+		fmt.Println("Shader file changes", file)
+		callFromMain(func(){
+			if err := s.load(file); err != nil {
+				fmt.Errorf("Shader error: %s", err)
+			} else {
+				fmt.Println("Shader successfull recompile")
 			}
-		}
-	}()
+		})
+	}); err != nil {
+		panic(fmt.Errorf("Error: %v", err))
+		return
+	}
 
-	return s, nil
+	return
 }
 
 func (s *Shader) load(file string) error {
