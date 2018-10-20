@@ -6,6 +6,7 @@ import (
 	"io/ioutil"
 	"github.com/go-yaml/yaml"
 	"github.com/go-gl/gl/v4.1-core/gl"
+	"github.com/go-gl/mathgl/mgl32"
 	"github.com/gubsky90/gongin/tools"
 )
 
@@ -50,11 +51,12 @@ func NewShaderFromFile(file string) (*Shader, error){
 	return s, nil
 }
 
-func NewShaderWatchFile(file string) (s *Shader, err error) {
+func NewShaderFromFileWatch(file string) (s *Shader, err error) {
 	s = _newShader()
 
-	if err := s.load(file); err != nil {
+	if err = s.load(file); err != nil {
 		fmt.Errorf("Shader error: %s", err)
+		return
 	}
 
 	if s.watcher, err = tools.NewFileWatcher(file, func() {
@@ -160,7 +162,8 @@ func (s *Shader) getUniformLocation(name string) int32 {
 		cname := gl.Str(name + "\x00")
 		location := gl.GetUniformLocation(s.id, cname)
 		if location < 0 {
-			panic(fmt.Errorf("Not found uniform with name \"%s\"", name))
+			fmt.Errorf("Warning: Not found uniform with name \"%s\"", name)
+			return -1
 		}
 		s.uniformLocations[name] = location
 	}
@@ -169,14 +172,34 @@ func (s *Shader) getUniformLocation(name string) int32 {
 }
 
 func (s *Shader) Set(name string, value interface{}) {
+	s.Use()
+
 	location := s.getUniformLocation(name)
+	if location < 0 {
+		return
+	}
+
 	switch v:= value.(type) {
 	case *Texture:
 		gl.Uniform1i(location, s.setTexture(name, v))
 	case int32:
 		gl.Uniform1i(location, v)
+	case uint32:
+		gl.Uniform1ui(location, v)
 	case float32:
 		gl.Uniform1f(location, v)
+	case mgl32.Vec2:
+		gl.Uniform2fv(location, 1, &v[0])
+	case mgl32.Vec3:
+		gl.Uniform3fv(location, 1, &v[0])
+	case mgl32.Vec4:
+		gl.Uniform4fv(location, 1, &v[0])
+	case mgl32.Mat2:
+		gl.UniformMatrix2fv(location, 1, false, &v[0])
+	case mgl32.Mat3:
+		gl.UniformMatrix3fv(location, 1, false, &v[0])
+	case mgl32.Mat4:
+		gl.UniformMatrix4fv(location, 1, false, &v[0])
 	default:
 		panic(fmt.Errorf("type unsupport: %T", v))
 	}

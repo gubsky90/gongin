@@ -17,7 +17,7 @@ fragment: |
 
   void main() {
     vec2 tp = TexCoords;
-    tp.x += sin(tp.y * 100 + iTime * 20.0) * 0.01;
+    // tp.x += sin(tp.y * 100 + iTime * 20.0) * 0.01;
 
     FragColor = texture(screenTexture, tp);
   }

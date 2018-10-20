@@ -9,7 +9,7 @@ type Texture struct {
 	id uint32
 }
 
-func New2DTexture(width uint, height uint) *Texture {
+func New2DTexture(width int, height int) *Texture {
 	t := Texture{}
 
 	gl.GenTextures(1, &t.id)

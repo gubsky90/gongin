@@ -10,7 +10,7 @@ type Framebuffer struct {
 	Color *Texture
 }
 
-func NewFramebuffer(width uint, height uint) *Framebuffer {
+func NewFramebuffer(width int, height int) *Framebuffer {
 	fb := Framebuffer{}
 
 	gl.GenFramebuffers(1, &fb.fbo)

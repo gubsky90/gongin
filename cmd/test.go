@@ -2,12 +2,12 @@ package main
 
 import (
 	"fmt"
-	// "runtime"
+	"runtime"
 	"github.com/gubsky90/gongin"
 )
 
 func main(){
-	// runtime.LockOSThread();
+	runtime.LockOSThread();
 
 	fmt.Println("Ok")
 
@@ -19,5 +19,6 @@ func main(){
 		fmt.Println("In ready handler")
 	})
 
-	gongin.Run()
+	// gongin.Run()
+	gongin.Run2()
 }

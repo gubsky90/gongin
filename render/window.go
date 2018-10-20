@@ -10,11 +10,11 @@ type Window struct {
 	*glfw.Window
 }
 
-func NewWindow (width uint, height uint) *Window {
+func NewWindow (width int, height int) *Window {
 	var err error
 	window := Window{}
 
-	window.Window, err = glfw.CreateWindow(int(width), int(height), "gongin", nil, nil)
+	window.Window, err = glfw.CreateWindow(width, height, "gongin", nil, nil)
 	if err != nil {
 		panic(fmt.Errorf("Could not create window: %v", err))
 	}

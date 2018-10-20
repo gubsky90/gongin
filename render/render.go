@@ -12,8 +12,8 @@ type RenderTarget interface {
 }
 
 type Config struct {
-	Width uint
-	Height uint
+	Width int
+	Height int
 }
 
 type Render struct {
@@ -55,9 +55,14 @@ func doMainFunctions() {
 
 func (r *Render) SwapBuffers() {
 	r.window.SwapBuffers()
-	glfw.PollEvents()
+	r.PollEvents()
 	doMainFunctions()
 }
+
+func (r *Render) PollEvents() {
+	glfw.PollEvents()
+}
+
 
 func (r *Render) GetWindow() *Window {
 	return r.window
